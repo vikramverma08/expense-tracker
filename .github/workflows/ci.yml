@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t expense-tracker:ci .
+
+      - name: Run Docker container
+        run: |
+          docker run -d --name expense-tracker-ci -p 8080:80 expense-tracker:ci
+          sleep 4
+
+      - name: Smoke test (HTTP 200 from running container)
+        run: |
+          curl -f http://localhost:8080
+
+      - name: Stop container
+        run: |
+          docker stop expense-tracker-ci
+          docker rm expense-tracker-ci
